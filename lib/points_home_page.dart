@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:smart_city/registration.dart';
 import 'points_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'report_issue.dart';
 
 class PointsHomePage extends StatelessWidget {
   @override
@@ -21,9 +22,7 @@ class PointsHomePage extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                Text(
-                  'Your Points:',
-                ),
+                Text('Your Points:'),
                 Consumer<PointsModel>(
                   builder: (context, pointsModel, child) {
                     return Text(
@@ -35,35 +34,15 @@ class PointsHomePage extends StatelessWidget {
                 SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () {
-                    Provider.of<PointsModel>(context, listen: false)
-                        .addPoints(10);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => ReportIssuePage()),
+                    );
                   },
                   child: Text('Report Issue (Earn 10 points)'),
                 ),
-                SizedBox(height: 10),
-                ElevatedButton(
-                  onPressed: () {
-                    Provider.of<PointsModel>(context, listen: false)
-                        .addPoints(5);
-                  },
-                  child: Text('Complete Survey (Earn 5 points)'),
-                ),
-                SizedBox(height: 10),
-                ElevatedButton(
-                  onPressed: () {
-                    Provider.of<PointsModel>(context, listen: false)
-                        .addPoints(3);
-                  },
-                  child: Text('Recycle Properly (Earn 3 points)'),
-                ),
-                SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () {
-                    Provider.of<PointsModel>(context, listen: false)
-                        .redeemPoints(20);
-                  },
-                  child: Text('Redeem 20 points for Discount'),
-                ),
+                // Other buttons...
               ],
             ),
           ),
