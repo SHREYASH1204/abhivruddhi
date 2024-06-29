@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smart_city/login.dart';
+import 'package:smart_city/report_issue.dart';
 import 'points_model.dart';
 import 'points_home_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -40,7 +41,7 @@ class MyApp extends StatelessWidget {
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             if (snapshot.data ?? false) {
-              return PointsHomePage();
+              return ReportIssuePage();
             } else {
               return LoginScreen();
             }
