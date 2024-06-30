@@ -41,7 +41,7 @@ class MyApp extends StatelessWidget {
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             if (snapshot.data ?? false) {
-              return ReportIssuePage();
+              return PointsHomePage();
             } else {
               return LoginScreen();
             }

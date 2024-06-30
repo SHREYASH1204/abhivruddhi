@@ -5,7 +5,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'points_model.dart';
 
@@ -15,11 +14,12 @@ class ReportIssuePage extends StatefulWidget {
 }
 
 class _ReportIssuePageState extends State<ReportIssuePage> {
-  final TextEditingController _controller = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _locationController = TextEditingController();
   CameraController? _cameraController;
   Uint8List? _imageData;
   String? _imageUrl;
-  Position? _currentPosition;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -28,24 +28,36 @@ class _ReportIssuePageState extends State<ReportIssuePage> {
   }
 
   Future<void> _requestPermissions() async {
-    await [
-      Permission.camera,
-      Permission.locationWhenInUse,
-    ].request();
-    _initializeCamera();
+    PermissionStatus cameraStatus = await Permission.camera.request();
+    print("Camera permission status: $cameraStatus");
+
+    if (!cameraStatus.isGranted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Camera permission is required')),
+      );
+      return;
+    }
+
+    await _initializeCamera();
   }
 
   Future<void> _initializeCamera() async {
-    final cameras = await availableCameras();
-    final camera = cameras.first;
+    try {
+      final cameras = await availableCameras();
+      final camera = cameras.first;
 
-    _cameraController = CameraController(
-      camera,
-      ResolutionPreset.high,
-    );
+      _cameraController = CameraController(
+        camera,
+        ResolutionPreset.high,
+      );
 
-    await _cameraController?.initialize();
-    setState(() {});
+      await _cameraController?.initialize();
+      setState(() {});
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error initializing camera: $e')),
+      );
+    }
   }
 
   Future<void> _takePicture() async {
@@ -55,6 +67,10 @@ class _ReportIssuePageState extends State<ReportIssuePage> {
       );
       return;
     }
+
+    setState(() {
+      _isLoading = true;
+    });
 
     try {
       final XFile file = await _cameraController!.takePicture();
@@ -66,32 +82,35 @@ class _ReportIssuePageState extends State<ReportIssuePage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error taking picture: $e')),
       );
-    }
-  }
-
-  Future<void> _getCurrentLocation() async {
-    try {
-      Position position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
+    } finally {
       setState(() {
-        _currentPosition = position;
+        _isLoading = false;
       });
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error getting location: $e')),
-      );
     }
   }
 
-  void _submitIssue() async {
-    final text = _controller.text;
+  Future<void> _submitIssue() async {
+    final description = _descriptionController.text;
+    final location = _locationController.text;
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null || _currentPosition == null) {
+
+    if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('User or location data not available')),
+        SnackBar(content: Text('User not available')),
       );
       return;
     }
+
+    if (description.isEmpty || location.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please provide a description and location')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
 
     String? imageUrl;
     if (_imageData != null) {
@@ -108,6 +127,9 @@ class _ReportIssuePageState extends State<ReportIssuePage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error uploading image: $e')),
         );
+        setState(() {
+          _isLoading = false;
+        });
         return;
       }
     }
@@ -115,11 +137,11 @@ class _ReportIssuePageState extends State<ReportIssuePage> {
     try {
       await FirebaseFirestore.instance.collection('issues').add({
         'userId': user.uid,
-        'text': text,
+        'description': description,
+        'location': location,
         'imageUrl': imageUrl,
         'timestamp': FieldValue.serverTimestamp(),
         'stars': 0,
-        'location': GeoPoint(_currentPosition!.latitude, _currentPosition!.longitude),
       });
 
       Provider.of<PointsModel>(context, listen: false).addPoints(10);
@@ -129,6 +151,10 @@ class _ReportIssuePageState extends State<ReportIssuePage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error submitting issue: $e')),
       );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -140,6 +166,7 @@ class _ReportIssuePageState extends State<ReportIssuePage> {
           color: Colors.white,
           padding: EdgeInsets.all(16.0),
           child: SingleChildScrollView(
+            scrollDirection: Axis.vertical,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -180,9 +207,16 @@ class _ReportIssuePageState extends State<ReportIssuePage> {
               ),
               SizedBox(height: 10),
               TextField(
-                controller: _controller,
+                controller: _descriptionController,
                 decoration: InputDecoration(
                   labelText: 'Describe the issue',
+                ),
+              ),
+              SizedBox(height: 10),
+              TextField(
+                controller: _locationController,
+                decoration: InputDecoration(
+                  labelText: 'Enter the location',
                 ),
               ),
               SizedBox(height: 10),
@@ -194,20 +228,16 @@ class _ReportIssuePageState extends State<ReportIssuePage> {
               SizedBox(height: 10),
               ElevatedButton(
                 onPressed: _takePicture,
-                child: Text('Take a Picture'),
+                child: _isLoading
+                    ? CircularProgressIndicator()
+                    : Text('Take a Picture'),
               ),
-              SizedBox(height: 10),
-              ElevatedButton(
-                onPressed: _getCurrentLocation,
-                child: Text('Get Current Location'),
-              ),
-              if (_currentPosition != null)
-                Text(
-                    'Location: ${_currentPosition!.latitude}, ${_currentPosition!.longitude}'),
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _submitIssue,
-                child: Text('Submit Issue'),
+                child: _isLoading
+                    ? CircularProgressIndicator()
+                    : Text('Submit Issue'),
               ),
             ],
           ),
@@ -219,6 +249,8 @@ class _ReportIssuePageState extends State<ReportIssuePage> {
   @override
   void dispose() {
     _cameraController?.dispose();
+    _descriptionController.dispose();
+    _locationController.dispose();
     super.dispose();
   }
 }
