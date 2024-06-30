@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:smart_city/login.dart';
-import 'package:smart_city/report_issue.dart';
 import 'points_model.dart';
 import 'points_home_page.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'login.dart';
 import 'firebase_options.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,7 +17,8 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(
-            create: (_) => PointsModel(FirebaseAuth.instance.currentUser!.uid)),
+          create: (_) => PointsModel(FirebaseAuth.instance.currentUser?.uid ?? ''),
+        ),
       ],
       child: MyApp(),
     ),
@@ -36,6 +36,10 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Smart City App',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
+      ),
       home: FutureBuilder<bool?>(
         future: checkIfUserIsLoggedIn(),
         builder: (context, snapshot) {
@@ -48,9 +52,12 @@ class MyApp extends StatelessWidget {
           } else {
             return Center(child: CircularProgressIndicator());
           }
-          return PointsHomePage();
         },
       ),
+      routes: {
+        '/login': (context) => LoginScreen(),
+        '/home': (context) => PointsHomePage(),
+      },
     );
   }
 }

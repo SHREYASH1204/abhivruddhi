@@ -158,42 +158,12 @@ class _ReportIssuePageState extends State<ReportIssuePage> {
     }
   }
 
-  void _showInstructions() {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        return Container(
-          color: Colors.white,
-          padding: EdgeInsets.all(16.0),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.vertical,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Instructions',
-                  style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 10),
-                Text(
-                  'Stand next to the garbage location and take a picture. This will help pinpoint the exact spot in photos.\n'
-                  'Frame the photo so that the garbage can is clearly visible in the shot. This will make it easy to identify the location later.\n'
-                  'You can also include other landmarks in the photo, such as a street sign or building, for additional reference.',
-                  style: TextStyle(fontSize: 16.0),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Report an Issue'),
+        backgroundColor: Color.fromARGB(255, 103, 222, 117),
       ),
       body: Padding(
         padding: EdgeInsets.all(16.0),
@@ -201,9 +171,9 @@ class _ReportIssuePageState extends State<ReportIssuePage> {
           scrollDirection: Axis.vertical,
           child: Column(
             children: <Widget>[
-              ElevatedButton(
-                onPressed: _showInstructions,
-                child: Text('Instructions'),
+              Text(
+                'Report issues such as water clogging, garbage overflow, and other city problems.',
+                style: TextStyle(fontSize: 16.0),
               ),
               SizedBox(height: 10),
               TextField(
@@ -228,6 +198,13 @@ class _ReportIssuePageState extends State<ReportIssuePage> {
               SizedBox(height: 10),
               ElevatedButton(
                 onPressed: _takePicture,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xFFFFF9C4), // Pastel yellow color
+                  foregroundColor: Colors.black, // Black text color
+                  textStyle: TextStyle(
+                    fontWeight: FontWeight.bold, // Bold text
+                  ),
+                ),
                 child: _isLoading
                     ? CircularProgressIndicator()
                     : Text('Take a Picture'),
@@ -235,6 +212,13 @@ class _ReportIssuePageState extends State<ReportIssuePage> {
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _submitIssue,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xFFFFF9C4), // Pastel yellow color
+                  foregroundColor: Colors.black, // Black text color
+                  textStyle: TextStyle(
+                    fontWeight: FontWeight.bold, // Bold text
+                  ),
+                ),
                 child: _isLoading
                     ? CircularProgressIndicator()
                     : Text('Submit Issue'),
