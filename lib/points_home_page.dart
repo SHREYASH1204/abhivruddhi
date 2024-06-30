@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:smart_city/registration.dart';
 import 'points_model.dart';
 import 'report_issue.dart';
+import 'homescreen.dart'; // Import the new AnnouncementPage
 
 class PointsHomePage extends StatelessWidget {
   @override
@@ -18,7 +19,6 @@ class PointsHomePage extends StatelessWidget {
           appBar: AppBar(
             title: Text('Community Points System'),
             backgroundColor: Color.fromARGB(255, 103, 222, 117),
-            
           ),
           body: Container(
             color: Colors.white, // Set background to white
@@ -61,6 +61,25 @@ class PointsHomePage extends StatelessWidget {
                           ),
                         ),
                         child: Text('View Points Levels'),
+                      ),
+                      SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => HomeScreen(title: 'Announcements'), // Navigate to the Announcement page
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color(0xFFFFF9C4), // Pastel yellow color
+                          foregroundColor: Colors.black, // Black text color
+                          textStyle: TextStyle(
+                            fontWeight: FontWeight.bold, // Bold text
+                          ),
+                        ),
+                        child: Text('See Announcements'),
                       ),
                     ],
                   );
